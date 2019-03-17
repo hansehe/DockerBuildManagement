@@ -1,33 +1,36 @@
 from SwarmManagement import SwarmTools
+from DockerBuildSystem import DockerImageTools, TerminalTools
 import os
 
+COMMAND_KEY = 'cmd'
 SELECTIONS_KEY = 'selections'
 FILES_KEY = 'files'
 DIRECTORY_KEY = 'directory'
+ADDITIONAL_TAG_KEY = 'additionalTag'
+ADDITIONAL_TAGS_KEY = 'additionalTags'
+
+COPY_FROM_CONTAINER_TAG = 'copyFromContainer'
+COPY_CONTAINER_SRC_TAG = 'containerSrc'
+COPY_HOST_DEST_TAG = 'hostDest'
+
+DEFAULT_BUILD_MANAGEMENT_YAML_FILE = 'build-management.yml'
+
 
 def GetInfoMsg():
     infoMsg = "One or more yaml files are used to configure the build.\r\n"
     infoMsg += "The yaml file 'build-management.yml' is used by default if no other files are specified.\r\n"
     infoMsg += "A yaml file may be specified by adding '-file' or '-f' to the arguments.\r\n"
     infoMsg += "Example: -f build-management-1.yml -f build-management-2.yml\r\n"
+    infoMsg += SwarmTools.GetEnvironmentVariablesInfoMsg()
+    infoMsg += SwarmTools.GetYamlDumpInfoMsg()
     return infoMsg
 
 
-def GetDockerBuildManagementYamlData(arguments):
-    yamlFiles = SwarmTools.GetArgumentValues(arguments, '-file')
-    yamlFiles += SwarmTools.GetArgumentValues(arguments, '-f')
-    if len(yamlFiles) == 0:
-        yamlFiles.append('build-management.yml')
-    yamlData = SwarmTools.GetYamlData(yamlFiles)
-    return yamlData
+def HandleTerminalCommandsSelection(selection):
+    if COMMAND_KEY in selection:
+        terminalCommands = selection[COMMAND_KEY]
+        TerminalTools.ExecuteTerminalCommands(terminalCommands, True)
 
-
-def GetProperties(arguments, propertyType, errorInfoMsg):
-    swarmManagementYamlData = GetDockerBuildManagementYamlData(arguments)
-    properties = {}
-    if propertyType in swarmManagementYamlData:
-        properties = swarmManagementYamlData[propertyType]
-    return properties
 
 
 def TryChangeToDirectoryAndGetCwd(selection):
@@ -42,3 +45,16 @@ def TryGetFromDictionary(dictionary, key, defaultValue):
     if key in dictionary:
         return dictionary[key]
     return defaultValue
+
+
+def HandleCopyFromContainer(dictionary):
+    if not(COPY_FROM_CONTAINER_TAG in dictionary):
+        return
+
+    for containerName in dictionary[COPY_FROM_CONTAINER_TAG]:
+        containerSrc = dictionary[COPY_FROM_CONTAINER_TAG][containerName][COPY_CONTAINER_SRC_TAG]
+        hostDest = dictionary[COPY_FROM_CONTAINER_TAG][containerName][COPY_HOST_DEST_TAG]
+        if not os.path.exists(hostDest):
+            os.makedirs(hostDest)
+        DockerImageTools.CopyFromContainerToHost(containerName, containerSrc, hostDest)
+

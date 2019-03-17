@@ -12,11 +12,16 @@ REMOVE_CONTAINERS_KEY = 'removeContainers'
 def GetInfoMsg():
     infoMsg = "Test selections is configured by adding a 'test' property to the .yaml file.\r\n"
     infoMsg += "The 'test' property is a dictionary of test selections.\r\n"
+    infoMsg += "Add '-test' to the arguments to run all test selections in sequence, \r\n"
+    infoMsg += "or add specific selection names to test those only.\r\n"
+    infoMsg += "Example: 'dbm -test myTestSelection'.\r\n"
     return infoMsg
 
 
 def GetTestSelections(arguments):
-    testProperty = BuildTools.GetProperties(arguments, TEST_KEY, GetInfoMsg())
+    yamlData = SwarmTools.LoadYamlDataFromFiles(
+        arguments, [BuildTools.DEFAULT_BUILD_MANAGEMENT_YAML_FILE])
+    testProperty = SwarmTools.GetProperties(arguments, TEST_KEY, GetInfoMsg(), yamlData)
     if BuildTools.SELECTIONS_KEY in testProperty:
         return testProperty[BuildTools.SELECTIONS_KEY]
     return {}
@@ -34,10 +39,19 @@ def TestSelections(selectionsToTest, testSelections):
 
 def TestSelection(testSelection):
     cwd = BuildTools.TryChangeToDirectoryAndGetCwd(testSelection)
-    DockerComposeTools.ExecuteComposeTests(
-        testSelection[BuildTools.FILES_KEY], 
-        testSelection[CONTAINER_NAMES_KEY], 
-        BuildTools.TryGetFromDictionary(testSelection, REMOVE_CONTAINERS_KEY, True))
+    BuildTools.HandleTerminalCommandsSelection(testSelection)
+
+    if BuildTools.FILES_KEY in testSelection:
+        DockerComposeTools.ExecuteComposeTests(
+            testSelection[BuildTools.FILES_KEY], 
+            testSelection[CONTAINER_NAMES_KEY], False)
+
+        BuildTools.HandleCopyFromContainer(testSelection)
+
+        if BuildTools.TryGetFromDictionary(testSelection, REMOVE_CONTAINERS_KEY, False):
+            DockerComposeTools.DockerComposeRemove(
+                testSelection[BuildTools.FILES_KEY])
+
     os.chdir(cwd)
 
 

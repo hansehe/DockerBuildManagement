@@ -13,3 +13,10 @@ __pycache__/
 .cache
 
 .vscode/
+.idea/
+
+example/output/
+**output/
+docker-compose.build.*.yml
+docker-compose.publish.*.yml
+docker-compose.run.*.yml

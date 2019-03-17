@@ -2,19 +2,22 @@ from DockerBuildSystem import VersionTools
 from SwarmManagement import SwarmTools
 from DockerBuildManagement import BuildTools
 import sys
-import os
 
 CHANGELOG_KEY = 'changelog'
 FILE_KEY = 'file'
 ENV_VERSION_KEY = 'envKey'
 
 def GetInfoMsg():
-    infoMsg = "Changelog selections is configured by adding a 'changelog' property to the .yaml file.\r\n"
+    infoMsg = "A changelog is configured by adding a 'changelog' property to the .yaml file.\r\n"
+    infoMsg += "Set the '{0}' property with the changelog filename (CHANGELOG.md), \r\n".format(FILE_KEY)
+    infoMsg += "and set the '{0}' property with the exposed environment key (VERSION) \r\n".format(ENV_VERSION_KEY)
     return infoMsg
 
 
 def GetChangelogSelection(arguments):
-    return BuildTools.GetProperties(arguments, CHANGELOG_KEY, GetInfoMsg())
+    yamlData = SwarmTools.LoadYamlDataFromFiles(
+        arguments, [BuildTools.DEFAULT_BUILD_MANAGEMENT_YAML_FILE])
+    return SwarmTools.GetProperties(arguments, CHANGELOG_KEY, GetInfoMsg(), yamlData)
 
 
 def ExportChangelogSelection(changelogSelection):

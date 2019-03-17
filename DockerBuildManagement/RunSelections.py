@@ -11,11 +11,16 @@ DETACHED_KEY = 'detached'
 def GetInfoMsg():
     infoMsg = "Run selections is configured by adding a 'run' property to the .yaml file.\r\n"
     infoMsg += "The 'run' property is a dictionary of run selections.\r\n"
+    infoMsg += "Add '-run' to the arguments to run all runnable selections in sequence, \r\n"
+    infoMsg += "or add specific selection names to run those only.\r\n"
+    infoMsg += "Example: 'dbm -run myRunnableSelection'.\r\n"
     return infoMsg
 
 
 def GetRunSelections(arguments):
-    runProperty = BuildTools.GetProperties(arguments, RUN_KEY, GetInfoMsg())
+    yamlData = SwarmTools.LoadYamlDataFromFiles(
+        arguments, [BuildTools.DEFAULT_BUILD_MANAGEMENT_YAML_FILE])
+    runProperty = SwarmTools.GetProperties(arguments, RUN_KEY, GetInfoMsg(), yamlData)
     if BuildTools.SELECTIONS_KEY in runProperty:
         return runProperty[BuildTools.SELECTIONS_KEY]
     return {}
@@ -33,10 +38,16 @@ def RunSelections(selectionsToRun, runSelections):
 
 def RunSelection(runSelection):
     cwd = BuildTools.TryChangeToDirectoryAndGetCwd(runSelection)
-    DockerComposeTools.DockerComposeUp(
-        runSelection[BuildTools.FILES_KEY],
-        BuildTools.TryGetFromDictionary(runSelection, ABORT_ON_CONTAINER_EXIT_KEY, True), 
-        BuildTools.TryGetFromDictionary(runSelection, DETACHED_KEY, False))
+    BuildTools.HandleTerminalCommandsSelection(runSelection)
+
+    if BuildTools.FILES_KEY in runSelection:
+        DockerComposeTools.DockerComposeUp(
+            runSelection[BuildTools.FILES_KEY],
+            BuildTools.TryGetFromDictionary(runSelection, ABORT_ON_CONTAINER_EXIT_KEY, True),
+            BuildTools.TryGetFromDictionary(runSelection, DETACHED_KEY, False))
+
+        BuildTools.HandleCopyFromContainer(runSelection)
+    
     os.chdir(cwd)
 
 

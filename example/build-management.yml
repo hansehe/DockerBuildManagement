@@ -2,57 +2,80 @@ changelog:
     file: CHANGELOG.md
     envKey: VERSION
 
+env_files: 
+    - environment.env
+
 run:
     selections:
         firstSelection:
             directory: src
+            copyFromContainer:
+                pythonSnippet:
+                    containerSrc: /src/
+                    hostDest: output/
+            cmd:
+                - python ./pythonSnippet.py
             abortOnContainerExit: true
             detached: false
             files:
-                - docker-compose.proxy.yml
-                - docker-compose.proxy.2.yml
+                - docker-compose.pythonSnippet.yml
+                - docker-compose.pythonSnippet.overriden.yml
         secondSelection:
             directory: src
-            abortOnContainerExit: false
-            detached: false
             files:
-                - docker-compose.proxy.yml
+                - docker-compose.pythonSnippet.yml
 
 build:
     selections:
         firstSelection:
             directory: src
+            cmd:
+                - python ./pythonSnippet.py
+            additionalTag: latest
+            additionalTags:
+                - beta
+                - zeta
+            saveImages: ../output
             files:
-                - docker-compose.proxy.yml
+                - docker-compose.pythonSnippet.yml
 
 test:
     selections:
         firstSelection:
             directory: src
+            cmd:
+                - python ./pythonSnippet.py
             removeContainers: true
             containerNames:
-                - ssl-proxy-web-c-name
+                - pythonSnippet
             files:
-                - docker-compose.proxy.yml
+                - docker-compose.pythonSnippet.yml
 
 publish:
     selections:
         firstSelection:
             directory: src
+            cmd:
+                - python ./pythonSnippet.py
             additionalTag: latest
+            additionalTags:
+                - beta
+                - zeta
             files:
-                - docker-compose.proxy.yml
+                - docker-compose.pythonSnippet.yml
         secondSelection:
             directory: src
             containerArtifact: false
             files:
-                - docker-compose.proxy.yml
+                - docker-compose.pythonSnippet.yml
 
 swarm:
     selections:
         firstSelection:
             directory: src
+            cmd:
+                - python ./pythonSnippet.py
             properties:
-                - some-property
+                - -stack -remove proxy
             files:
                 - swarm-management.yml
