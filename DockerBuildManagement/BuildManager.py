@@ -1,7 +1,7 @@
 import sys
+import os.path
 from DockerBuildManagement import ChangelogSelections, BuildSelections, PublishSelections, RunSelections, SwarmSelections, TestSelections, BuildTools
 from SwarmManagement import SwarmTools
-
 
 def GetInfoMsg():
     infoMsg = "Docker Build Management\r\n\r\n"
@@ -21,8 +21,8 @@ def GetInfoMsg():
     infoMsg += BuildTools.GetInfoMsg() + "\r\n\r\n"
     infoMsg += "Add '-help' to arguments to print this info again.\r\n\r\n"
     return infoMsg
-
-
+    
+    
 def HandleManagement(arguments):
     if len(arguments) == 0:
         print(GetInfoMsg())
@@ -31,12 +31,11 @@ def HandleManagement(arguments):
     if '-help' in arguments and len(arguments) == 1:
         print(GetInfoMsg())
         return
-
+    
     SwarmTools.LoadEnvironmentVariables(
-        arguments, [BuildTools.DEFAULT_BUILD_MANAGEMENT_YAML_FILE])
+        arguments, BuildTools.DEFAULT_BUILD_MANAGEMENT_YAML_FILES)
     SwarmTools.HandleDumpYamlData(
-        arguments, [BuildTools.DEFAULT_BUILD_MANAGEMENT_YAML_FILE])
-
+        arguments, BuildTools.DEFAULT_BUILD_MANAGEMENT_YAML_FILES)
     ChangelogSelections.HandleChangelogSelections(arguments)
     SwarmSelections.HandleSwarmSelections(arguments)
     BuildSelections.HandleBuildSelections(arguments)

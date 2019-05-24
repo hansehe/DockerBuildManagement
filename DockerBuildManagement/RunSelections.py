@@ -19,7 +19,7 @@ def GetInfoMsg():
 
 def GetRunSelections(arguments):
     yamlData = SwarmTools.LoadYamlDataFromFiles(
-        arguments, [BuildTools.DEFAULT_BUILD_MANAGEMENT_YAML_FILE])
+        arguments, BuildTools.DEFAULT_BUILD_MANAGEMENT_YAML_FILES)
     runProperty = SwarmTools.GetProperties(arguments, RUN_KEY, GetInfoMsg(), yamlData)
     if BuildTools.SELECTIONS_KEY in runProperty:
         return runProperty[BuildTools.SELECTIONS_KEY]
@@ -43,8 +43,8 @@ def RunSelection(runSelection):
     if BuildTools.FILES_KEY in runSelection:
         DockerComposeTools.DockerComposeUp(
             runSelection[BuildTools.FILES_KEY],
-            BuildTools.TryGetFromDictionary(runSelection, ABORT_ON_CONTAINER_EXIT_KEY, True),
-            BuildTools.TryGetFromDictionary(runSelection, DETACHED_KEY, False))
+            SwarmTools.TryGetFromDictionary(runSelection, ABORT_ON_CONTAINER_EXIT_KEY, True),
+            SwarmTools.TryGetFromDictionary(runSelection, DETACHED_KEY, False))
 
         BuildTools.HandleCopyFromContainer(runSelection)
     

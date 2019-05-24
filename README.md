@@ -5,7 +5,7 @@
 [![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
 
 Build Management is a python application, installed with pip.
-The application makes it easy to manage a build system based on Docker by configuring a single *.yml file describing how to build the solution.
+The application makes it easy to manage a build system based on Docker by configuring a single yaml file describing how to build, test, run or publish a containerized solution.
 
 ## Install Or Upgrade
 - pip install --upgrade DockerBuildManagement
@@ -35,12 +35,15 @@ Start/Stop/Restart the swarm:
 
 Please refer to the [SwarmManagement](https://github.com/DIPSAS/SwarmManagement) project for further info on how to configure the swarm deployment.
 
-By convention, the default yaml filename is `build-management.yml`.
+By convention, the default yaml filename is `build.management.yml`.
 It is possible to specify a separate yaml file (or multiple) with the `-f` key:
 - `dbm -f my-build.yml -run`
 
 ```yml
 changelog:
+    directory: src
+    cmd:
+        - python ./pythonSnippet.py
     file: CHANGELOG.md
     envKey: VERSION
 
@@ -140,6 +143,8 @@ Or take a look at another project which takes use of this library:
 The `run` section runs all listed docker-compose files with `docker-compose up`.
 - `abortOnContainerExit: true/false` -> Tell docker-compose to abort when either of the containers exits. Default is `true`.
 - `detached: true/false` -> Tell docker-compose to run the services in detached mode. Default is `false`.
+    - Note that the `abortOnContainerExit` property will be ignored if `detached` is set to `true`. 
+      - docker-compose does not allow to run a compose file as detached while telling it to abort on container exit.
 - `copyFromContainer` -> Copy anything from a docker container to a destination on your computer. The section contains keys matching the container name, and this key has the following sub-keys:
     - `containerSrc: <folder_path/file_path>` -> Source path to copy from the container.
     -  `hostDest: <folder_path/file_path>` -> Destination path on your computer to copy the container content.
@@ -168,7 +173,8 @@ The `swarm` section helps to deploy service stacks to your local swarm. It reuse
 
 ### General Properties
 - `changelog` -> The `changelog` property parses a [CHANGELOG.md](example/CHANGELOG.md) file and sets an environment variables with current version. It contains following sub-keys:
-    - `file` -> Path to the `CHANGELOG.md` file.
+    - `file` -> Path to the changelog file. The changelog file must be of a format similar to [example/src/CHANGELOG.md](example/src/CHANGELOG.md).
+      - The `cmd` property may be used to trigger a script exposing the `VERSION` environment variable in any preferred way if the changelog standard isn't suitable.
     - `envKey` -> On which environment variable to expose the version value. Default is `VERSION`.
 - `env_files` -> List of `.env` files listing environment variables to expose. By convention, a present `.env` file will automatically be used to expose environment variables. Additionally, any yaml file may contain the `${*}` sequence anywhere in the file. The matching environment variable (`ENV_KEY` of `${ENV_KEY}`) will replace this sequence with the value of the environment variable.
 

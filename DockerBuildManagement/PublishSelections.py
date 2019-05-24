@@ -18,7 +18,7 @@ def GetInfoMsg():
 
 def GetPublishSelections(arguments):
     yamlData = SwarmTools.LoadYamlDataFromFiles(
-        arguments, [BuildTools.DEFAULT_BUILD_MANAGEMENT_YAML_FILE])
+        arguments, BuildTools.DEFAULT_BUILD_MANAGEMENT_YAML_FILES)
     publishProperty = SwarmTools.GetProperties(arguments, PUBLISH_KEY, GetInfoMsg(), yamlData)
     if BuildTools.SELECTIONS_KEY in publishProperty:
         return publishProperty[BuildTools.SELECTIONS_KEY]
@@ -40,7 +40,7 @@ def PublishSelection(publishSelection, publishSelectionKey):
     BuildTools.HandleTerminalCommandsSelection(publishSelection)
 
     if BuildTools.FILES_KEY in publishSelection:
-        if BuildTools.TryGetFromDictionary(publishSelection, CONTAINER_ARTIFACT_KEY, True):
+        if SwarmTools.TryGetFromDictionary(publishSelection, CONTAINER_ARTIFACT_KEY, True):
             PublishContainerSelection(publishSelection, publishSelectionKey)
         else:
             PublishArtifactSelection(publishSelection)

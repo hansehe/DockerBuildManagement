@@ -2,6 +2,7 @@ from DockerBuildSystem import VersionTools
 from SwarmManagement import SwarmTools
 from DockerBuildManagement import BuildTools
 import sys
+import os
 
 CHANGELOG_KEY = 'changelog'
 FILE_KEY = 'file'
@@ -16,7 +17,7 @@ def GetInfoMsg():
 
 def GetChangelogSelection(arguments):
     yamlData = SwarmTools.LoadYamlDataFromFiles(
-        arguments, [BuildTools.DEFAULT_BUILD_MANAGEMENT_YAML_FILE])
+        arguments, BuildTools.DEFAULT_BUILD_MANAGEMENT_YAML_FILES)
     return SwarmTools.GetProperties(arguments, CHANGELOG_KEY, GetInfoMsg(), yamlData)
 
 
@@ -25,7 +26,7 @@ def ExportChangelogSelection(changelogSelection):
         return
 
     VersionTools.ExportVersionFromChangelogToEnvironment(
-        changelogSelection[FILE_KEY], BuildTools.TryGetFromDictionary(changelogSelection, ENV_VERSION_KEY, 'VERSION'))
+        changelogSelection[FILE_KEY], SwarmTools.TryGetFromDictionary(changelogSelection, ENV_VERSION_KEY, 'VERSION'))
 
 
 def HandleChangelogSelections(arguments):
@@ -34,7 +35,12 @@ def HandleChangelogSelections(arguments):
         return
 
     changelogSelection = GetChangelogSelection(arguments)
+    cwd = BuildTools.TryChangeToDirectoryAndGetCwd(changelogSelection)
+
+    BuildTools.HandleTerminalCommandsSelection(changelogSelection)
     ExportChangelogSelection(changelogSelection)
+
+    os.chdir(cwd)
 
 
 if __name__ == "__main__":
