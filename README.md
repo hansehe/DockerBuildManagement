@@ -1,7 +1,7 @@
 # Docker Build Management
 
 [![PyPI version](https://badge.fury.io/py/DockerBuildManagement.svg)](https://badge.fury.io/py/DockerBuildManagement)
-[![Build Status](https://travis-ci.com/DIPSAS/DockerBuildManagement.svg?branch=master)](https://travis-ci.com/DIPSAS/DockerBuildManagement)
+[![Build Status](https://travis-ci.com/hansehe/DockerBuildManagement.svg?branch=master)](https://travis-ci.com/hansehe/DockerBuildManagement)
 [![MIT license](http://img.shields.io/badge/license-MIT-brightgreen.svg)](http://opensource.org/licenses/MIT)
 
 Build Management is a python application, installed with pip.
@@ -34,7 +34,7 @@ Start/Stop/Restart the swarm:
 - `dbm -swarm -stop`
 - `dbm -swarm -restart`
 
-Please refer to the [SwarmManagement](https://github.com/DIPSAS/SwarmManagement) project for further info on how to configure the swarm deployment.
+Please refer to the [SwarmManagement](https://github.com/hansehe/SwarmManagement) project for further info on how to configure the swarm deployment.
 
 By convention, the default yaml filename is `build.management.yml`.
 It is possible to specify a separate yaml file (or multiple) with the `-f` key:
@@ -166,10 +166,10 @@ swarm:
 ```
 
 Please have a look at an example of use here:
-- https://github.com/DIPSAS/DockerBuildManagement/tree/master/example
+- https://github.com/hansehe/DockerBuildManagement/tree/master/example
 
 Or take a look at another project which takes use of this library:
-- https://github.com/DIPSAS/FluentDbTools
+- https://github.com/hansehe/FluentDbTools
 
 ## Section Features
 
@@ -222,7 +222,7 @@ The `promote` section promotes docker images listed in the `images` property usi
      
 
 ### Swarm Features
-The `swarm` section helps to deploy service stacks to your local swarm. It reuses the [SwarmManagement](https://github.com/DIPSAS/SwarmManagement) deployment tool to deploy and remove services to and from the Swarm.
+The `swarm` section helps to deploy service stacks to your local swarm. It reuses the [SwarmManagement](https://github.com/hansehe/SwarmManagement) deployment tool to deploy and remove services to and from the Swarm.
 - `files` -> The `files` property lists all `swarm-management.yml` deployment files to use for deploying stacks on the Swarm.
 - `properties` -> This property is a list of `SwarmManagement` commands to run in addition to starting or stopping the Swarm stacks.
 
