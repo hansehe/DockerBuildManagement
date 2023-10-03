@@ -93,6 +93,9 @@ build:
             saveImages: ../output
             composeFileWithDigests: docker-compose.digest.pythonSnippet.yml
             preserveMergedComposeFile: false
+            platforms:
+                - linux/amd64
+                - linux/arm64
             files:
                 - docker-compose.pythonSnippet.yml
 
@@ -194,6 +197,7 @@ The `run` section runs all listed docker-compose files with `docker-compose up`.
 The `build` section builds all docker images as described by the `docker-compose.yml` files.
 - `additionalTag: <additional_image_tag>` -> Include an additional tag to all built docker images.
 - `additionalTags: <list_of_additional_image_tags>` -> Include a list of additional tags to all built docker images.
+- `platforms: <list_of_image_platforms_for_multi_build>` -> Include a list of platforms for multi target architecture, such as linux/amd64 and linux/arm64.
 - `saveImages: <output_folder>` -> Save all built docker images from the compose file as tar files. The files will be saved in the given output folder.
 - `composeFileWithDigests: <docker-compose.with_digests.yml>` -> Get an updated version of the compose files with the unique digest included in the image names. An unique digest is generated for each published image and should always be used in production.
   - Note! The image digest is produced by docker only when the image is published to a remote repository, meaning the image must exist on a remote repository to have the image tag replaced with the image digest.
