@@ -57,19 +57,31 @@ def PublishContainerSelection(publishSelection, selectionToPublish):
     composeFiles = publishSelection[BuildTools.FILES_KEY]
     publishComposeFile = BuildTools.GetAvailableComposeFilename('publish', selectionToPublish)
     DockerComposeTools.MergeComposeFiles(composeFiles, publishComposeFile)
+    multiTargetPlatformsPublish = False
 
     try:
-        DockerComposeTools.PublishDockerImages(publishComposeFile)
+        if BuildTools.PLATFORMS_TAG_KEY in publishSelection:
+            multiTargetPlatformsPublish = True
+            additionalTags = publishSelection.get(BuildTools.ADDITIONAL_TAGS_KEY, [])
+            if BuildTools.ADDITIONAL_TAG_KEY in publishSelection:
+                additionalTags.append(publishSelection[BuildTools.ADDITIONAL_TAG_KEY])
+            DockerComposeTools.MultiBuildDockerImages(publishComposeFile, publishSelection[BuildTools.PLATFORMS_TAG_KEY], additionalTags, True)
+        else:
+            DockerComposeTools.PublishDockerImages(publishComposeFile)
     except:
         BuildTools.RemoveComposeFileIfNotPreserved(publishComposeFile, publishSelection)
         raise
 
-    if BuildTools.ADDITIONAL_TAG_KEY in publishSelection:
-        DockerComposeTools.PublishDockerImagesWithNewTag(publishComposeFile, publishSelection[BuildTools.ADDITIONAL_TAG_KEY])
-    if BuildTools.ADDITIONAL_TAGS_KEY in publishSelection:
-        for tag in publishSelection[BuildTools.ADDITIONAL_TAGS_KEY]:
-            DockerComposeTools.PublishDockerImagesWithNewTag(publishComposeFile, tag)
+    if not multiTargetPlatformsPublish:
+        if BuildTools.ADDITIONAL_TAG_KEY in publishSelection:
+            DockerComposeTools.PublishDockerImagesWithNewTag(publishComposeFile, publishSelection[BuildTools.ADDITIONAL_TAG_KEY])
+        if BuildTools.ADDITIONAL_TAGS_KEY in publishSelection:
+            for tag in publishSelection[BuildTools.ADDITIONAL_TAGS_KEY]:
+                DockerComposeTools.PublishDockerImagesWithNewTag(publishComposeFile, tag)
+
     if BuildTools.COMPOSE_FILE_WITH_DIGESTS_KEY in publishSelection:
+        if multiTargetPlatformsPublish:
+            DockerComposeTools.DockerComposePull(publishComposeFile)
         composeFileWithDigests = publishSelection[BuildTools.COMPOSE_FILE_WITH_DIGESTS_KEY]
         BuildTools.GenerateComposeFileWithDigests(composeFiles, composeFileWithDigests)
 
