@@ -48,7 +48,10 @@ def BuildSelection(buildSelection, selectionToBuild):
         DockerComposeTools.MergeComposeFiles(composeFiles, buildComposeFile)
 
         try:
-            DockerComposeTools.DockerComposeBuild([buildComposeFile])
+            if BuildTools.PLATFORMS_TAG_KEY in buildSelection:
+                DockerComposeTools.MultiBuildDockerImages(buildComposeFile, buildSelection[BuildTools.PLATFORMS_TAG_KEY])
+            else:
+                DockerComposeTools.DockerComposeBuild([buildComposeFile])
         except:
             BuildTools.RemoveComposeFileIfNotPreserved(buildComposeFile, buildSelection)
             raise

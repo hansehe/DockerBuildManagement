@@ -13,6 +13,7 @@ COMPOSE_FILE_WITH_DIGESTS_KEY = 'composeFileWithDigests'
 PRESERVE_MERGED_COMPOSE_FILE = 'preserveMergedComposeFile'
 CONTAINER_NAMES_KEY = 'containerNames'
 REMOVE_CONTAINERS_KEY = 'removeContainers'
+PLATFORMS_TAG_KEY = 'platforms'
 
 COPY_FROM_CONTAINER_TAG = 'copyFromContainer'
 COPY_CONTAINER_SRC_TAG = 'containerSrc'
