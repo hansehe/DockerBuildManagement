@@ -29,10 +29,11 @@ It is also possible to execute multiple command sections in the same command lin
 - `dbm -test -build -run secondSelection`
 
 The `swarm` section helps deploying necessary domain services needed in the development.
-Start/Stop/Restart the swarm:
+Start/Stop/Restart/Wait the swarm:
 - `dbm -swarm -start`
 - `dbm -swarm -stop`
 - `dbm -swarm -restart`
+- `dbm -swarm -wait`
 
 Please refer to the [SwarmManagement](https://github.com/hansehe/SwarmManagement) project for further info on how to configure the swarm deployment.
 
@@ -266,4 +267,4 @@ The `swarm` section helps to deploy service stacks to your local swarm. It reuse
 2. Install from local file with force-reinstall and no-cache-dir options to force reinstallation when you have changed the code without changing the version number: `python -m pip install path\to\yourgitrepo\DockerBuildManagement\dist\DockerBuildManagement-0.0.65-py2.py3-none-any.whl --force-reinstall --no-cache-dir`
 
 ## Run Unit Tests
-- python -m unittest
+- python -m unittest discover -p *Test*.py

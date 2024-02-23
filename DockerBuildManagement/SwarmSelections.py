@@ -17,9 +17,12 @@ def GetInfoMsg():
     infoMsg += "or add specific selection names to stop those only.\r\n"
     infoMsg += "Add '-swarm -restart' to the arguments to restart all swarm selections, \r\n"
     infoMsg += "or add specific selection names to restart those only.\r\n"
+    infoMsg += "Add '-swarm -wait' to the arguments to wait all swarm selections, \r\n"
+    infoMsg += "or add specific selection names to wait those only.\r\n"
     infoMsg += "Example: 'dbm -swarm -start mySwarmSelection'.\r\n"
     infoMsg += "Example: 'dbm -swarm -stop mySwarmSelection'.\r\n"
     infoMsg += "Example: 'dbm -swarm -restart mySwarmSelection'.\r\n"
+    infoMsg += "Example: 'dbm -swarm -wait mySwarmSelection'.\r\n"
     return infoMsg
 
 
@@ -78,6 +81,8 @@ def GetSwarmCommand(arguments):
         return '-stop'
     if '-restart' in arguments:
         return '-restart'
+    if '-wait' in arguments:
+        return '-wait'
     return ''
 
 
@@ -113,6 +118,7 @@ def HandleSwarmSelections(arguments):
         swarmSelectionsToDeploy += SwarmTools.GetArgumentValues(arguments, '-start')
         swarmSelectionsToDeploy += SwarmTools.GetArgumentValues(arguments, '-stop')
         swarmSelectionsToDeploy += SwarmTools.GetArgumentValues(arguments, '-restart')
+        swarmSelectionsToDeploy += SwarmTools.GetArgumentValues(arguments, '-wait')
 
     swarmSelections = GetSwarmSelections(arguments)
     DeploySwarmSelections(swarmSelectionsToDeploy, swarmSelections, GetSwarmCommand(arguments))
