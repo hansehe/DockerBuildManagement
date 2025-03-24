@@ -91,6 +91,9 @@ build:
             additionalTags:
                 - ${VERSION:-1.0.0}.beta
                 - ${VERSION:-1.0.0}.zeta
+            platforms:
+                - linux/amd64
+                - linux/arm64
             saveImages: ../output
             composeFileWithDigests: docker-compose.digest.pythonSnippet.yml
             preserveMergedComposeFile: false
@@ -107,6 +110,9 @@ test:
                 - python ./pythonSnippet.py
             removeContainers: true
             preserveMergedComposeFile: false
+            platforms:
+                - linux/amd64
+                - linux/arm64
             files:
                 - docker-compose.pythonSnippet.yml
 

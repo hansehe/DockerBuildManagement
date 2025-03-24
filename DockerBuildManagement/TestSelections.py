@@ -49,10 +49,14 @@ def TestSelection(testSelection, selectionToTest):
             containerNames = testSelection[BuildTools.CONTAINER_NAMES_KEY]
 
         try:
+            multiTargetPlatforms = False
+            if BuildTools.PLATFORMS_TAG_KEY in testSelection:
+                multiTargetPlatforms = True
+                DockerComposeTools.MultiBuildDockerImages(testComposeFile, testSelection[BuildTools.PLATFORMS_TAG_KEY])
             DockerComposeTools.ExecuteComposeTests([testComposeFile],
                                                    testContainerNames=containerNames,
                                                    removeTestContainers=False,
-                                                   buildCompose=True,
+                                                   buildCompose=not multiTargetPlatforms,
                                                    downCompose=False)
         except:
             BuildTools.RemoveComposeFileIfNotPreserved(testComposeFile, testSelection)

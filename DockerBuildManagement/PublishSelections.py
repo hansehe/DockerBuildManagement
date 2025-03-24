@@ -57,11 +57,11 @@ def PublishContainerSelection(publishSelection, selectionToPublish):
     composeFiles = publishSelection[BuildTools.FILES_KEY]
     publishComposeFile = BuildTools.GetAvailableComposeFilename('publish', selectionToPublish)
     DockerComposeTools.MergeComposeFiles(composeFiles, publishComposeFile)
-    multiTargetPlatformsPublish = False
+    multiTargetPlatforms = False
 
     try:
         if BuildTools.PLATFORMS_TAG_KEY in publishSelection:
-            multiTargetPlatformsPublish = True
+            multiTargetPlatforms = True
             additionalTags = publishSelection.get(BuildTools.ADDITIONAL_TAGS_KEY, [])
             if BuildTools.ADDITIONAL_TAG_KEY in publishSelection:
                 additionalTags.append(publishSelection[BuildTools.ADDITIONAL_TAG_KEY])
@@ -72,7 +72,7 @@ def PublishContainerSelection(publishSelection, selectionToPublish):
         BuildTools.RemoveComposeFileIfNotPreserved(publishComposeFile, publishSelection)
         raise
 
-    if not multiTargetPlatformsPublish:
+    if not multiTargetPlatforms:
         if BuildTools.ADDITIONAL_TAG_KEY in publishSelection:
             DockerComposeTools.PublishDockerImagesWithNewTag(publishComposeFile, publishSelection[BuildTools.ADDITIONAL_TAG_KEY])
         if BuildTools.ADDITIONAL_TAGS_KEY in publishSelection:
@@ -80,7 +80,7 @@ def PublishContainerSelection(publishSelection, selectionToPublish):
                 DockerComposeTools.PublishDockerImagesWithNewTag(publishComposeFile, tag)
 
     if BuildTools.COMPOSE_FILE_WITH_DIGESTS_KEY in publishSelection:
-        if multiTargetPlatformsPublish:
+        if multiTargetPlatforms:
             DockerComposeTools.DockerComposePull(publishComposeFile)
         composeFileWithDigests = publishSelection[BuildTools.COMPOSE_FILE_WITH_DIGESTS_KEY]
         BuildTools.GenerateComposeFileWithDigests(composeFiles, composeFileWithDigests)
