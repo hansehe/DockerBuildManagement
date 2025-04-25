@@ -3,6 +3,9 @@ from DockerBuildManagement import BuildTools
 from DockerBuildSystem import YamlTools, TerminalTools
 import sys
 import os
+import logging
+
+log = logging.getLogger(__name__)
 
 SWARM_KEY = 'swarm'
 PROPERTIES_KEY = 'properties'
@@ -105,11 +108,11 @@ def HandleSwarmSelections(arguments):
         return
 
     if '-help' in arguments:
-        print(GetInfoMsg())
+        log.info(GetInfoMsg())
         return
 
     if CheckSwarmInArguments(arguments) and not(CheckSwarmCommandInArguments(arguments)):
-        print(GetInfoMsg())
+        log.info(GetInfoMsg())
 
     swarmSelectionsToDeploy = SwarmTools.GetArgumentValues(arguments, '-swarm')
     swarmSelectionsToDeploy += SwarmTools.GetArgumentValues(arguments, '-s')

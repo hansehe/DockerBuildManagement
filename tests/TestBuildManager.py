@@ -1,7 +1,10 @@
 import unittest
 import os
+import logging
 from tests import TestTools
 from DockerBuildManagement import BuildManager
+
+log = logging.getLogger(__name__)
 
 class TestBuildManager(unittest.TestCase):
 
@@ -56,12 +59,12 @@ class TestBuildManager(unittest.TestCase):
             i = newIndex
 
     def test_c_start_test_build_run_stop(self):
-        print('EXECUTING ALL SELECTIONS TEST')
+        log.info('EXECUTING ALL SELECTIONS TEST')
         cwd = TestTools.ChangeToSampleFolderAndGetCwd()
         arguments = ['-swarm', '-start', '-test', '-build', '-run', '-stop']
         BuildManager.HandleManagement(arguments)
         os.chdir(cwd)
-        print('DONE EXECUTING ALL SELECTIONS TEST')
+        log.info('DONE EXECUTING ALL SELECTIONS TEST')
 
 if __name__ == '__main__':
     unittest.main()

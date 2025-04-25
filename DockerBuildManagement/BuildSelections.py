@@ -2,7 +2,10 @@ from DockerBuildSystem import DockerComposeTools, YamlTools, TerminalTools
 from SwarmManagement import SwarmTools
 from DockerBuildManagement import BuildTools
 import sys
+import logging
 import os
+
+log = logging.getLogger(__name__)
 
 BUILD_KEY = 'build'
 SAVE_IMAGES_KEY = 'saveImages'
@@ -88,7 +91,7 @@ def HandleBuildSelections(arguments):
         return
 
     if '-help' in arguments:
-        print(GetInfoMsg())
+        log.info(GetInfoMsg())
         return
 
     selectionsToBuild = SwarmTools.GetArgumentValues(arguments, '-build')

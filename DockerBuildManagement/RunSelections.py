@@ -3,6 +3,9 @@ from SwarmManagement import SwarmTools
 from DockerBuildManagement import BuildTools
 import sys
 import os
+import logging
+
+log = logging.getLogger(__name__)
 
 RUN_KEY = 'run'
 ABORT_ON_CONTAINER_EXIT_KEY = 'abortOnContainerExit'
@@ -82,7 +85,7 @@ def HandleRunSelections(arguments):
         return
 
     if '-help' in arguments:
-        print(GetInfoMsg())
+        log.info(GetInfoMsg())
         return
 
     selectionsToRun = SwarmTools.GetArgumentValues(arguments, '-run')

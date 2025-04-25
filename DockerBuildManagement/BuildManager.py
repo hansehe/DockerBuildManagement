@@ -1,7 +1,11 @@
 import sys
 import os
+import logging
 from DockerBuildManagement import ChangelogSelections, BuildSelections, PublishSelections, RunSelections, SwarmSelections, TestSelections, BuildTools, PromoteSelections
 from SwarmManagement import SwarmTools
+
+log = logging.getLogger(__name__)
+
 
 def GetInfoMsg():
     infoMsg = "Docker Build Management\r\n\r\n"
@@ -51,11 +55,11 @@ def SetDefaultCommonEnvVariables():
     
 def HandleManagement(arguments):
     if len(arguments) == 0:
-        print(GetInfoMsg())
+        log.info(GetInfoMsg())
         return
 
     if '-help' in arguments and len(arguments) == 1:
-        print(GetInfoMsg())
+        log.info(GetInfoMsg())
         return
     
     SwarmTools.LoadEnvironmentVariables(

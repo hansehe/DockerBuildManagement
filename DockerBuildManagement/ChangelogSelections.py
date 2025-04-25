@@ -3,6 +3,9 @@ from SwarmManagement import SwarmTools
 from DockerBuildManagement import BuildTools
 import sys
 import os
+import logging
+
+log = logging.getLogger(__name__)
 
 CHANGELOG_KEY = 'changelog'
 FILE_KEY = 'file'
@@ -37,7 +40,7 @@ def ExportChangelogSelection(changelogSelection):
 
 def HandleChangelogSelections(arguments):
     if '-help' in arguments:
-        print(GetInfoMsg())
+        log.info(GetInfoMsg())
         return
 
     changelogSelection = GetChangelogSelection(arguments)

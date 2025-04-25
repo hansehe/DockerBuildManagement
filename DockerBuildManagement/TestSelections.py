@@ -3,6 +3,9 @@ from SwarmManagement import SwarmTools
 from DockerBuildManagement import BuildTools
 import sys
 import os
+import logging
+
+log = logging.getLogger(__name__)
 
 TEST_KEY = 'test'
 
@@ -80,7 +83,7 @@ def HandleTestSelections(arguments):
         return
 
     if '-help' in arguments:
-        print(GetInfoMsg())
+        log.info(GetInfoMsg())
         return
 
     selectionsToTest = SwarmTools.GetArgumentValues(arguments, '-test')

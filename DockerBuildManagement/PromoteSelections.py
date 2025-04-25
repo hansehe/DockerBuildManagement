@@ -3,6 +3,9 @@ from SwarmManagement import SwarmTools
 from DockerBuildManagement import BuildTools
 import sys
 import os
+import logging
+
+log = logging.getLogger(__name__)
 
 PROMOTE_KEY = 'promote'
 CONTAINER_ARTIFACT_KEY = 'containerArtifact'
@@ -46,14 +49,14 @@ def PromoteSelection(promoteSelection, selectionToPromote):
         if YamlTools.TryGetFromDictionary(promoteSelection, CONTAINER_ARTIFACT_KEY, True):
             PromoteImageSelection(promoteSelection, selectionToPromote)
         else:
-            print('Only image promotion is supported')
+            log.info('Only image promotion is supported')
 
     BuildTools.RemoveEnvironmentVariables(oldEnvironmentVariable)
     os.chdir(cwd)
 
 
 def PromoteImageSelection(promoteSelection, selectionToPromote):
-    print("selection to promote: {}".format(selectionToPromote))
+    log.info("selection to promote: {}".format(selectionToPromote))
 
     composeFiles = promoteSelection[BuildTools.FILES_KEY]
     promoteComposeFile = BuildTools.GetAvailableComposeFilename('promote', selectionToPromote)
@@ -86,7 +89,7 @@ def HandlePromoteSelections(arguments):
         return
 
     if '-help' in arguments:
-        print(GetInfoMsg())
+        log.info(GetInfoMsg())
         return
 
     selectionsToPromote = SwarmTools.GetArgumentValues(arguments, '-promote')

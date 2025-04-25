@@ -3,6 +3,9 @@ from SwarmManagement import SwarmTools
 from DockerBuildManagement import BuildTools
 import sys
 import os
+import logging
+
+log = logging.getLogger(__name__)
 
 PUBLISH_KEY = 'publish'
 CONTAINER_ARTIFACT_KEY = 'containerArtifact'
@@ -103,7 +106,7 @@ def HandlePublishSelections(arguments):
         return
 
     if '-help' in arguments:
-        print(GetInfoMsg())
+        log.info(GetInfoMsg())
         return
 
     selectionsToPublish = SwarmTools.GetArgumentValues(arguments, '-publish')
