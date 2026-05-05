@@ -1,7 +1,7 @@
 import sys
 import os
 import logging
-from DockerBuildManagement import ChangelogSelections, BuildSelections, PublishSelections, RunSelections, SwarmSelections, TestSelections, BuildTools, PromoteSelections
+from DockerBuildManagement import ChangelogSelections, BuildSelections, PublishSelections, RunSelections, SwarmSelections, TestSelections, BuildTools, PromoteSelections, MergeSelections
 from SwarmManagement import SwarmTools
 
 log = logging.getLogger(__name__)
@@ -15,6 +15,8 @@ def GetInfoMsg():
     infoMsg += BuildSelections.GetInfoMsg() + "\r\n\r\n"
     infoMsg += "Publish:\r\n"
     infoMsg += PublishSelections.GetInfoMsg() + "\r\n\r\n"
+    infoMsg += "Merge:\r\n"
+    infoMsg += MergeSelections.GetInfoMsg() + "\r\n\r\n"
     infoMsg += "Promote:\r\n"
     infoMsg += PromoteSelections.GetInfoMsg() + "\r\n\r\n"
     infoMsg += "Test:\r\n"
@@ -69,6 +71,14 @@ def HandleManagement(arguments):
         arguments, BuildTools.DEFAULT_BUILD_MANAGEMENT_YAML_FILES)
     ChangelogSelections.HandleChangelogSelections(arguments)
 
+    BuildTools.SetGlobalPlatformsOverride(
+        SwarmTools.GetArgumentValues(arguments, '-platforms'))
+    BuildTools.SetGlobalPushByDigest('-pushByDigest' in arguments)
+    digestsFiles = SwarmTools.GetArgumentValues(arguments, '-digestsFile')
+    BuildTools.SetGlobalDigestsFile(digestsFiles[0] if digestsFiles else None)
+    BuildTools.SetGlobalDigestFilesOverride(
+        SwarmTools.GetArgumentValues(arguments, '-digestFiles'))
+
     index = 0
     while index < len(arguments):
         actionArgs, index = GetPositionalActionArguments(arguments, index)
@@ -77,6 +87,7 @@ def HandleManagement(arguments):
         TestSelections.HandleTestSelections(actionArgs)
         RunSelections.HandleRunSelections(actionArgs)
         PublishSelections.HandlePublishSelections(actionArgs)
+        MergeSelections.HandleMergeSelections(actionArgs)
         PromoteSelections.HandlePromoteSelections(actionArgs)
 
 

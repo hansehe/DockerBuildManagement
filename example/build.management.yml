@@ -97,6 +97,20 @@ publish:
             files:
                 - docker-compose.pythonSnippet.yml
 
+merge:
+    selections:
+        firstSelection:
+            directory: src
+            additionalTag: latest
+            additionalTags:
+                - ${VERSION:-1.0.0}.beta
+                - ${VERSION:-1.0.0}.zeta
+            digestFiles:
+                - ../digests-amd64.json
+                - ../digests-arm64.json
+            files:
+                - docker-compose.pythonSnippet.yml
+
 promote:
     selections:
         firstSelection:

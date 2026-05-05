@@ -52,12 +52,13 @@ def BuildSelection(buildSelection, selectionToBuild):
         multiTargetPlatforms = False
 
         try:
-            if BuildTools.PLATFORMS_TAG_KEY in buildSelection:
+            platforms = BuildTools.GetEffectivePlatforms(buildSelection)
+            if platforms:
                 multiTargetPlatforms = True
                 additionalTags = buildSelection.get(BuildTools.ADDITIONAL_TAGS_KEY, [])
                 if BuildTools.ADDITIONAL_TAG_KEY in buildSelection:
                     additionalTags.append(buildSelection[BuildTools.ADDITIONAL_TAG_KEY])
-                DockerComposeTools.MultiBuildDockerImages(buildComposeFile, buildSelection[BuildTools.PLATFORMS_TAG_KEY], additionalTags)
+                DockerComposeTools.MultiBuildDockerImages(buildComposeFile, platforms, additionalTags)
             else:
                 DockerComposeTools.DockerComposeBuild([buildComposeFile])
         except:

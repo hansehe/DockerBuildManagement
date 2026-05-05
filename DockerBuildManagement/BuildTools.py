@@ -14,6 +14,7 @@ PRESERVE_MERGED_COMPOSE_FILE = 'preserveMergedComposeFile'
 CONTAINER_NAMES_KEY = 'containerNames'
 REMOVE_CONTAINERS_KEY = 'removeContainers'
 PLATFORMS_TAG_KEY = 'platforms'
+DIGEST_FILES_KEY = 'digestFiles'
 
 COPY_FROM_CONTAINER_TAG = 'copyFromContainer'
 COPY_CONTAINER_SRC_TAG = 'containerSrc'
@@ -33,6 +34,64 @@ DEFAULT_BUILD_MANAGEMENT_YAML_FILES = [
     'build.management.yaml',
     'build-management.yml',
     'build-management.yaml']
+
+
+_PLATFORMS_OVERRIDE = None
+_PUSH_BY_DIGEST = False
+_DIGESTS_FILE = None
+_DIGEST_FILES_OVERRIDE = None
+
+DEFAULT_DIGESTS_FILE = 'dbm-digests.json'
+
+
+def SetGlobalPlatformsOverride(platforms):
+    global _PLATFORMS_OVERRIDE
+    _PLATFORMS_OVERRIDE = platforms if platforms else None
+
+
+def GetGlobalPlatformsOverride():
+    return _PLATFORMS_OVERRIDE
+
+
+def GetEffectivePlatforms(selection):
+    if _PLATFORMS_OVERRIDE:
+        return _PLATFORMS_OVERRIDE
+    if PLATFORMS_TAG_KEY in selection:
+        return selection[PLATFORMS_TAG_KEY]
+    return None
+
+
+def SetGlobalPushByDigest(enabled):
+    global _PUSH_BY_DIGEST
+    _PUSH_BY_DIGEST = bool(enabled)
+
+
+def GetGlobalPushByDigest():
+    return _PUSH_BY_DIGEST
+
+
+def SetGlobalDigestsFile(digestsFile):
+    global _DIGESTS_FILE
+    _DIGESTS_FILE = digestsFile if digestsFile else None
+
+
+def GetGlobalDigestsFile():
+    if _DIGESTS_FILE:
+        return _DIGESTS_FILE
+    return DEFAULT_DIGESTS_FILE
+
+
+def SetGlobalDigestFilesOverride(digestFiles):
+    global _DIGEST_FILES_OVERRIDE
+    _DIGEST_FILES_OVERRIDE = digestFiles if digestFiles else None
+
+
+def GetEffectiveDigestFiles(selection):
+    if _DIGEST_FILES_OVERRIDE:
+        return _DIGEST_FILES_OVERRIDE
+    if DIGEST_FILES_KEY in selection:
+        return selection[DIGEST_FILES_KEY]
+    return None
 
 
 def GetInfoMsg():

@@ -1,4 +1,4 @@
-from DockerBuildSystem import DockerComposeTools, YamlTools, TerminalTools
+from DockerBuildSystem import DockerComposeTools, YamlTools, TerminalTools, MultiArchTools
 from SwarmManagement import SwarmTools
 from DockerBuildManagement import BuildTools
 import sys
@@ -62,13 +62,20 @@ def PublishContainerSelection(publishSelection, selectionToPublish):
     DockerComposeTools.MergeComposeFiles(composeFiles, publishComposeFile)
     multiTargetPlatforms = False
 
+    pushByDigest = False
     try:
-        if BuildTools.PLATFORMS_TAG_KEY in publishSelection:
+        platforms = BuildTools.GetEffectivePlatforms(publishSelection)
+        if platforms and BuildTools.GetGlobalPushByDigest():
+            multiTargetPlatforms = True
+            pushByDigest = True
+            MultiArchTools.MultiBuildPushByDigest(
+                publishComposeFile, platforms, BuildTools.GetGlobalDigestsFile())
+        elif platforms:
             multiTargetPlatforms = True
             additionalTags = publishSelection.get(BuildTools.ADDITIONAL_TAGS_KEY, [])
             if BuildTools.ADDITIONAL_TAG_KEY in publishSelection:
                 additionalTags.append(publishSelection[BuildTools.ADDITIONAL_TAG_KEY])
-            DockerComposeTools.MultiBuildDockerImages(publishComposeFile, publishSelection[BuildTools.PLATFORMS_TAG_KEY], additionalTags, True)
+            DockerComposeTools.MultiBuildDockerImages(publishComposeFile, platforms, additionalTags, True)
         else:
             DockerComposeTools.PublishDockerImages(publishComposeFile)
     except:
@@ -82,7 +89,7 @@ def PublishContainerSelection(publishSelection, selectionToPublish):
             for tag in publishSelection[BuildTools.ADDITIONAL_TAGS_KEY]:
                 DockerComposeTools.PublishDockerImagesWithNewTag(publishComposeFile, tag)
 
-    if BuildTools.COMPOSE_FILE_WITH_DIGESTS_KEY in publishSelection:
+    if BuildTools.COMPOSE_FILE_WITH_DIGESTS_KEY in publishSelection and not pushByDigest:
         if multiTargetPlatforms:
             DockerComposeTools.DockerComposePull(publishComposeFile)
         composeFileWithDigests = publishSelection[BuildTools.COMPOSE_FILE_WITH_DIGESTS_KEY]

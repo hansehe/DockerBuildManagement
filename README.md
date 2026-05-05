@@ -15,14 +15,15 @@ The application makes it easy to manage a build system based on Docker by config
 
 ## Example
 
-Either of the sections (`run`, `build`, `test`, `publish`, `promote`) in the yaml file is triggered with the following cli commands:
+Either of the sections (`run`, `build`, `test`, `publish`, `merge`, `promote`) in the yaml file is triggered with the following cli commands:
 - `dbm -run`
 - `dbm -build`
 - `dbm -test`
 - `dbm -publish`
+- `dbm -merge`
 - `dbm -promote`
 
-Each of the command sections (`run`, `build`, `test`, `publish`, `promote`) includes context sections, each defined by a suitable key describing that section. Each of the context sections are executed in sequence from top to bottom by default, or you may specify the sections to execute by adding the section keys to the command line:
+Each of the command sections (`run`, `build`, `test`, `publish`, `merge`, `promote`) includes context sections, each defined by a suitable key describing that section. Each of the context sections are executed in sequence from top to bottom by default, or you may specify the sections to execute by adding the section keys to the command line:
 - `dbm -run secondSelection`
 
 It is also possible to execute multiple command sections in the same command line:
@@ -141,6 +142,20 @@ publish:
             files:
                 - docker-compose.pythonSnippet.yml
 
+merge:
+    selections:
+        firstSelection:
+            directory: src
+            additionalTag: latest
+            additionalTags:
+                - ${VERSION:-1.0.0}.beta
+                - ${VERSION:-1.0.0}.zeta
+            digestFiles:
+                - ../digests-amd64.json
+                - ../digests-arm64.json
+            files:
+                - docker-compose.pythonSnippet.yml
+
 promote:
     selections:
         firstSelection:
@@ -221,6 +236,13 @@ The `publish` section publishes all docker images listed in the `docker-compose.
 - `containerArtifact: true/false` -> Sometimes the solution does not publish docker images, but just something else such as nugets, pypi or gem packages. With this property set to `true`, you can make a docker container do the work of publishing the artifact. Default is `false`.
 - `composeFileWithDigests: <docker-compose.with_digests.yml>` -> Get an updated version of the compose files with the unique digest included in the image names. An unique digest is generated for each published image and should always be used in production.
 
+### Merge Features
+The `merge` section combines per-architecture image digests (produced by `-publish -pushByDigest` jobs running on native arch runners) into a single multi-arch manifest using `docker buildx imagetools create`. This is the recommended approach for fast CI pipelines that build each architecture on its native runner instead of emulating with QEMU on a single runner.
+- `digestFiles: <list_of_digest_json_files>` -> List of digest JSON files (each produced by a per-arch publish job) to combine. Paths are resolved relative to the selection's `directory`. Can be overridden / supplemented from the cli with `-digestFiles a.json b.json`.
+- `additionalTag: <additional_image_tag>` -> Apply this tag to the resulting multi-arch manifest in addition to the primary image tag from the compose file.
+- `additionalTags: <list_of_additional_image_tags>` -> Apply this list of tags to the resulting multi-arch manifest.
+- `files: <list_of_compose_files>` -> Compose files used to determine the image name and primary tag for each service. Should match the compose files used by the corresponding publish selection.
+
 ### Promote Features
 The `promote` section promotes docker images listed in the `images` property using docker pull, docker tag and docker push.
 - `targetTags: <list_of_target_tags>` -> the tags you want to use when you push the image to the new feed. Mandatory to set.
@@ -236,6 +258,75 @@ The `promote` section promotes docker images listed in the `images` property usi
 The `swarm` section helps to deploy service stacks to your local swarm. It reuses the [SwarmManagement](https://github.com/hansehe/SwarmManagement) deployment tool to deploy and remove services to and from the Swarm.
 - `files` -> The `files` property lists all `swarm-management.yml` deployment files to use for deploying stacks on the Swarm.
 - `properties` -> This property is a list of `SwarmManagement` commands to run in addition to starting or stopping the Swarm stacks.
+
+### Multi-Architecture Builds Across Native Runners
+Building a multi-arch image (e.g. `linux/amd64` + `linux/arm64`) on a single runner forces QEMU emulation for the foreign arch and is slow. dbm can split the build across one job per architecture (each running on a native runner) and then merge the per-arch digests into a single multi-arch manifest list.
+
+Three top-level cli flags drive this flow:
+- `-platforms <platform> [<platform>...]` -> Globally overrides the `platforms` property of every selection executed in this dbm invocation. Useful for forcing a single platform per matrix job (e.g. `-platforms linux/amd64`).
+- `-pushByDigest` -> When combined with `-publish` and `-platforms`, builds each service with `docker buildx build --output type=image,push-by-digest=true,push=true` so each per-arch job pushes only digest blobs (no `:tag` is created). The captured digests are written to a JSON file.
+- `-digestsFile <path>` -> Path to write the digests JSON file to (default `dbm-digests.json` in the current directory).
+- `-digestFiles <a.json> <b.json> ...` -> For `-merge`. Lists the per-arch digest JSON files to combine. Overrides any `digestFiles` set in the yaml `merge` selection.
+
+Notes:
+- `additionalTag` / `additionalTags` are ignored on the per-arch publish jobs in digest-mode and are applied only at merge time on the resulting multi-arch index.
+- `composeFileWithDigests` is also skipped in digest-mode (no `:tag` exists yet to inspect).
+
+Example GitHub Actions matrix using these flags:
+
+```yaml
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            arch: amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.9' }
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - run: pip install DockerBuildManagement
+      - run: |
+          dbm -publish service \
+              -platforms ${{ matrix.platform }} \
+              -pushByDigest \
+              -digestsFile digests-${{ matrix.arch }}.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.arch }}
+          path: digests-${{ matrix.arch }}.json
+
+  merge:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: digests-*
+          merge-multiple: true
+      - run: pip install DockerBuildManagement
+      - run: dbm -merge service -digestFiles digests-amd64.json digests-arm64.json
+```
 
 ### General Properties
 - `changelog` -> The `changelog` property parses a [CHANGELOG.md](example/CHANGELOG.md) file and sets an environment variables with current version. It contains following sub-keys:
