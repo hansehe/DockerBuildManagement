@@ -142,20 +142,6 @@ publish:
             files:
                 - docker-compose.pythonSnippet.yml
 
-merge:
-    selections:
-        firstSelection:
-            directory: src
-            additionalTag: latest
-            additionalTags:
-                - ${VERSION:-1.0.0}.beta
-                - ${VERSION:-1.0.0}.zeta
-            digestFiles:
-                - ../digests-amd64.json
-                - ../digests-arm64.json
-            files:
-                - docker-compose.pythonSnippet.yml
-
 promote:
     selections:
         firstSelection:
@@ -238,6 +224,10 @@ The `publish` section publishes all docker images listed in the `docker-compose.
 
 ### Merge Features
 The `merge` section combines per-architecture image digests (produced by `-publish -pushByDigest` jobs running on native arch runners) into a single multi-arch manifest using `docker buildx imagetools create`. This is the recommended approach for fast CI pipelines that build each architecture on its native runner instead of emulating with QEMU on a single runner.
+
+A separate `merge` yaml block is **optional**: if no matching `merge` selection exists, dbm falls back to the same-named image `publish` selection (publish selections with `containerArtifact: false` are skipped because they do not publish docker images). This means in most cases you do not need to duplicate `files`, `additionalTag` and `additionalTags` between `publish` and `merge` - the `publish` selection is reused as-is and you only need to pass `-digestFiles ... ...` on the cli at merge time.
+
+When you do define an explicit `merge` selection, it takes precedence over the publish-fallback for the same name. Supported keys:
 - `digestFiles: <list_of_digest_json_files>` -> List of digest JSON files (each produced by a per-arch publish job) to combine. Paths are resolved relative to the selection's `directory`. Can be overridden / supplemented from the cli with `-digestFiles a.json b.json`.
 - `additionalTag: <additional_image_tag>` -> Apply this tag to the resulting multi-arch manifest in addition to the primary image tag from the compose file.
 - `additionalTags: <list_of_additional_image_tags>` -> Apply this list of tags to the resulting multi-arch manifest.

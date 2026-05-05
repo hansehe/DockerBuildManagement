@@ -1,6 +1,6 @@
 from DockerBuildSystem import DockerComposeTools, YamlTools, TerminalTools, DockerImageTools, MultiArchTools
 from SwarmManagement import SwarmTools
-from DockerBuildManagement import BuildTools
+from DockerBuildManagement import BuildTools, PublishSelections
 import sys
 import os
 import logging
@@ -19,6 +19,8 @@ def GetInfoMsg():
     infoMsg += "into a single multi-arch manifest using 'docker buildx imagetools create'.\r\n"
     infoMsg += "Provide digest files via the 'digestFiles' yaml property, "
     infoMsg += "or via '-digestFiles a.json b.json' on the cli (cli overrides yaml).\r\n"
+    infoMsg += "If no matching 'merge' selection is found, the same-named image 'publish' selection "
+    infoMsg += "is used as fallback - so a separate 'merge' yaml block is usually not required.\r\n"
     infoMsg += "Example: 'dbm -merge myMergeSelection -digestFiles digests-amd64.json digests-arm64.json'.\r\n"
     return infoMsg
 
@@ -40,6 +42,31 @@ def MergeSelections(selectionsToMerge, mergeSelections):
         for selectionToMerge in selectionsToMerge:
             if selectionToMerge in mergeSelections:
                 MergeSelection(mergeSelections[selectionToMerge], selectionToMerge)
+            else:
+                log.info(
+                    "Skipping merge for selection '{0}': no matching merge or image publish selection found.".format(
+                        selectionToMerge))
+
+
+def BuildEffectiveSelections(mergeSelections, publishSelections):
+    """Combine merge and publish selections into a single dict.
+
+    Merge selections take precedence over publish selections of the same name.
+    Only publish selections that publish container images (containerArtifact
+    defaults to True) are eligible as fallback sources - artifact publishes
+    (nuget, pypi, etc.) are filtered out because they have no docker image
+    to merge.
+    """
+    effective = {}
+    for name in publishSelections:
+        publishSelection = publishSelections[name]
+        if not YamlTools.TryGetFromDictionary(
+                publishSelection, PublishSelections.CONTAINER_ARTIFACT_KEY, True):
+            continue
+        effective[name] = publishSelection
+    for name in mergeSelections:
+        effective[name] = mergeSelections[name]
+    return effective
 
 
 def MergeSelection(mergeSelection, selectionToMerge):
@@ -133,7 +160,9 @@ def HandleMergeSelections(arguments):
     selectionsToMerge = SwarmTools.GetArgumentValues(arguments, '-merge')
 
     mergeSelections = GetMergeSelections(arguments)
-    MergeSelections(selectionsToMerge, mergeSelections)
+    publishSelections = PublishSelections.GetPublishSelections(arguments)
+    effectiveSelections = BuildEffectiveSelections(mergeSelections, publishSelections)
+    MergeSelections(selectionsToMerge, effectiveSelections)
 
 
 if __name__ == "__main__":
